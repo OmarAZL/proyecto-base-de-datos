@@ -36,6 +36,7 @@ export class TareasController {
     return this.tareas.getTareas();
   }*/
 
+  @Get()
   listar(@Query() query: any) {
     console.log(query);
     return this.tareas.listar(query);
