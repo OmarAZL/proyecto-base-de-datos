@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateTarea } from './dto/createTarea.dto';
+import { UpdateTarea } from './dto/updateTarea.dto';
 
 @Injectable()
 export class TareasService {
@@ -40,6 +41,29 @@ export class TareasService {
     return result.rows[0];
   }
 
+  async updateTarea(id: number, data: UpdateTarea) {
+    const validKeys: (keyof UpdateTarea)[] = ["nombre", "descripcion", "story_points", "fecha_entrega", "asignado_id"];
+    const keys = []
+    const values = []
+
+    Object.keys(data).forEach((key, i) => {
+      if(validKeys.includes(key as keyof UpdateTarea)) {
+        keys.push(`${key} = $${i + 1}`) // key = $i
+        values.push(data[key])}
+      });
+
+     if (keys.length === 0) {
+      throw new BadRequestException('No hay campos validos para actualizar');
+    }
+
+    const sql = `UPDATE tareas set ${keys.join(', ')} WHERE id = $${values.length + 1} RETURNING *;`;
+
+    values.push(id)
+
+    const result = await this.db.query(sql, values);
+      return result.rows[0];
+  }
+
   // ============================
   // LISTAR TAREAS (con filtros)
   // ============================
@@ -59,35 +83,6 @@ export class TareasService {
 
     const result = await this.db.query(sql, params);
     return result.rows;
-  }
-
-  // ============================
-  // ACTUALIZAR TAREA
-  // ============================
-  async actualizar(id: number, data: any) {
-    const campos = [];
-    const valores = [];
-
-    Object.keys(data).forEach((key, i) => {
-      campos.push(`${key} = $${i + 1}`);
-      valores.push(data[key]);
-    });
-
-    if (campos.length === 0) {
-      throw new BadRequestException('No hay campos para actualizar');
-    }
-
-    const sql = `
-      UPDATE tareas
-      SET ${campos.join(', ')}
-      WHERE id = $${valores.length + 1}
-      RETURNING *;
-    `;
-
-    valores.push(id);
-
-    const result = await this.db.query(sql, valores);
-    return result.rows[0];
   }
 
   // ============================

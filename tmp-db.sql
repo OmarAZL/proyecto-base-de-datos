@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
 CREATE TABLE IF NOT EXISTS tareas (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL,
+    nombre VARCHAR(255) UNIQUE NOT NULL,
     descripcion TEXT,
     story_points INTEGER CHECK (story_points >= 0),
     estado VARCHAR(20) NOT NULL DEFAULT 'pendiente' 

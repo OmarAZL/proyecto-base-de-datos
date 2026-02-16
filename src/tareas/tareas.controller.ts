@@ -13,6 +13,7 @@ import {
 import { TareasService } from './tareas.service';
 import { JwtGuard } from '../auth/jwt.guard';
 import { CreateTarea } from './dto/createTarea.dto';
+import { UpdateTarea } from './dto/updateTarea.dto';
 
 @Controller('tareas')
 @UseGuards(JwtGuard)
@@ -20,21 +21,24 @@ export class TareasController {
   constructor(private tareas: TareasService) {}
 
   @Post()
-  crear(@Body() body: CreateTarea, @Req() req: any) {
+  createTarea(@Body() body: CreateTarea, @Req() req: any) {
     return this.tareas.createTarea(body, req.user.id);
   }
 
-  @Get()
-  listar(@Query() query: any) {
-    console.log(query);
-    return this.tareas.getTareas();
+  @Patch('/:id')
+  updateTarea(@Body() body: UpdateTarea, @Param('id') id: number) {
+    return this.tareas.updateTarea(id, body);
   }
 
-  @Patch(':id')
-  actualizar(@Param('id') id: number, @Body() body: any) {
-    delete body.creador_id;
-    delete body.id;
-    return this.tareas.actualizar(id, body);
+  /*@Get()
+  getTareas(@Query('creadorId') creadorId: string, 
+            @Query('estado') estado: string) {
+    return this.tareas.getTareas();
+  }*/
+
+  listar(@Query() query: any) {
+    console.log(query);
+    return this.tareas.listar(query);
   }
 
   @Get(':id')
