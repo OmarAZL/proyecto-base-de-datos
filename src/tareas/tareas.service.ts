@@ -8,16 +8,6 @@ export class TareasService {
 
   constructor(private db: DatabaseService) {}
 
-  async getTareas() {
-    const result = await this.db.query('SELECT * FROM tareas');
-    return result.rows;
-  }
-
-  async getTarea(id: number) {
-    const result = await this.db.query('SELECT * FROM tareas WHERE id = $1', [id]);
-    return result.rows[0];
-  }
-
   // ============================
   // CREAR TAREA
   // ============================
@@ -41,6 +31,9 @@ export class TareasService {
     return result.rows[0];
   }
 
+  // ============================
+  // Actualizar TAREA
+  // ============================
   async updateTarea(id: number, data: UpdateTarea) {
     const validKeys: (keyof UpdateTarea)[] = ["nombre", "descripcion", "story_points", "fecha_entrega", "asignado_id"];
     const keys = []

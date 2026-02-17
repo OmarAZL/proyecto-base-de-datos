@@ -30,12 +30,6 @@ export class TareasController {
     return this.tareas.updateTarea(id, body);
   }
 
-  /*@Get()
-  getTareas(@Query('creadorId') creadorId: string, 
-            @Query('estado') estado: string) {
-    return this.tareas.getTareas();
-  }*/
-
   @Get()
   listar(@Query() query: any) {
     console.log(query);
