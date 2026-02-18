@@ -33,5 +33,4 @@ export class CategoriasService {
     
     return result.rows[0];
   }
-
 }

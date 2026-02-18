@@ -89,7 +89,7 @@ export class TareasService {
     }
 
     const comentarios = await this.db.query(
-      'SELECT * FROM comentarios WHERE tarea_id = $1 ORDER BY fecha DESC',
+      'SELECT * FROM comentarios WHERE tarea_id = $1 ORDER BY fecha_creacion DESC',
       [id],
     );
 

@@ -1,20 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class ComentariosService {
-  private comentarios = [];
-
-  crear(data: any) {
-    const nuevo = { id: Date.now(), ...data };
-    this.comentarios.push(nuevo);
-    return nuevo;
+  constructor(private db: DatabaseService) {}
+  
+  async getComentarios(tareaID: number) {
+    const sql = `SELECT * FROM comentarios WHERE tarea_id = $1`
+    const result = await this.db.query(sql, [tareaID]);
+    return result.rows;
   }
 
-  listar() {
-    return this.comentarios;
+  async getComentario(tareaID: number, comentarioID: number) {
+    const sql = `SELECT * FROM comentarios WHERE tarea_id = $1 AND id = $2`
+    const result = await this.db.query(sql, [tareaID, comentarioID]);
+    return result.rows[0];
   }
 
-  obtener(id: number) {
-    return this.comentarios.find((c) => c.id === id);
+  async createComentario(content: string, tareaID: number, creadorID: number) {
+    const sql = `INSERT INTO comentarios(contenido, tarea_id, creador_id) VALUES ($1, $2, $3) RETURNING *`
+    const result = await this.db.query(sql, [content, tareaID, creadorID])
+    return result.rows[0];
   }
 }
+ 
