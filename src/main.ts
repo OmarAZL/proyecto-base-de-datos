@@ -2,15 +2,39 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get<number>('SERVER_PORT') || 3000;
+  
   app.useGlobalPipes(new ValidationPipe({
-    transform: true, // Esto habilita la transformación automática
+    transform: true,
   }));
-  await app.listen(port);
+
+  const config = new DocumentBuilder()
+    .setTitle('ToDo List Api')
+    .setDescription('Proyecto para Diseño de Bases de Datos.')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Ingresa tu token JWT',
+      in: 'header'
+    },
+    'token-auth'
+  )
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('/', app, documentFactory, {
+    swaggerOptions: {
+      persistAuthorization: true
+    }
+  });
+
+  await app.listen(port, '0.0.0.0');
 
 }
 bootstrap();

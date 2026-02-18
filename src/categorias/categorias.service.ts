@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { CreateCategoria } from './dto/createCategoria.dto';
+import { CreateCategoriaDto } from './dto/createCategoria.dto';
 
 @Injectable()
 export class CategoriasService {
   constructor(private db: DatabaseService) {}
   
-  async createCategoria(nuevaCategoria: CreateCategoria) {
+  async createCategoria(nuevaCategoria: CreateCategoriaDto) {
     const sql = `INSERT INTO categorias(nombre, descripcion, color) VALUES ($1, $2, $3) RETURNING *`
     const result = await this.db.query(sql, [...Object.values(nuevaCategoria)])
     
