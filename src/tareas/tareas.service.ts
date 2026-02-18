@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, NotFoundException, HttpException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { CreateTarea } from './dto/createTarea.dto';
-import { UpdateTarea } from './dto/updateTarea.dto';
+import { CreateTareaDto } from './dto/createTarea.dto';
+import { UpdateTareaDto } from './dto/updateTarea.dto';
+import { error } from 'node:console';
 
 @Injectable()
 export class TareasService {
@@ -11,12 +12,8 @@ export class TareasService {
   // ============================
   // CREAR TAREA
   // ============================
-  async createTarea(data: CreateTarea, creadorId: number) {
+  async createTarea(data: CreateTareaDto, creadorId: number) {
     const { nombre, descripcion, story_points, fecha_entrega, asignado_id } = data;
-
-    if (!asignado_id) {
-      throw new BadRequestException('El campo asignado_id es obligatorio');
-    }
 
     const sql = `
       INSERT INTO tareas (nombre, descripcion, story_points, fecha_entrega, creador_id, asignado_id)
@@ -24,23 +21,30 @@ export class TareasService {
       RETURNING *;
     `;
 
+    try {
     const result = await this.db.query(sql, 
-      [nombre, descripcion, story_points, fecha_entrega, creadorId, asignado_id,]
-    );
-
+    [nombre, descripcion, story_points, fecha_entrega, creadorId, asignado_id,]);
+      
     return result.rows[0];
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(`Ya existe una tarea con el nombre: "${nombre}"`);
+      }
+    }
+    
+    throw error;
   }
 
   // ============================
   // Actualizar TAREA
   // ============================
-  async updateTarea(id: number, data: UpdateTarea) {
-    const validKeys: (keyof UpdateTarea)[] = ["nombre", "descripcion", "story_points", "fecha_entrega", "asignado_id"];
+  async updateTarea(id: number, data: UpdateTareaDto) {
+    const validKeys: (keyof UpdateTareaDto)[] = ["nombre", "descripcion", "story_points", "fecha_entrega", "asignado_id"];
     const keys = []
     const values = []
 
     Object.keys(data).forEach((key, i) => {
-      if(validKeys.includes(key as keyof UpdateTarea)) {
+      if(validKeys.includes(key as keyof UpdateTareaDto)) {
         keys.push(`${key} = $${i + 1}`) // key = $i
         values.push(data[key])}
       });
@@ -48,13 +52,27 @@ export class TareasService {
      if (keys.length === 0) {
       throw new BadRequestException('No hay campos validos para actualizar');
     }
-
+    
     const sql = `UPDATE tareas set ${keys.join(', ')} WHERE id = $${values.length + 1} RETURNING *;`;
 
-    values.push(id)
-
-    const result = await this.db.query(sql, values);
+    try {
+      values.push(id)
+      const result = await this.db.query(sql, values);
+      if (result.rowCount === 0) {
+        throw new NotFoundException(`No se encontró la tarea con el ID ${id}`);
+      }
       return result.rows[0];
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      
+      if (error.code === '23505') {
+        throw new ConflictException(`Ya existe una tarea con el nombre: "${data.nombre}"`);
+      }
+    }
+    
+    throw error;
   }
 
   // ============================
@@ -114,15 +132,17 @@ export class TareasService {
   // ASOCIAR CATEGORÍA A TAREA
   // ============================
   async asociarCategoria(tareaId: number, categoriaId: number) {
-    const sql = `
-      INSERT INTO tareas_categorias (tarea_id, categoria_id)
-      VALUES ($1, $2)
-      ON CONFLICT DO NOTHING;
-    `;
+    const sql = `INSERT INTO tareas_categorias (tarea_id, categoria_id) VALUES ($1, $2);`;
 
-    await this.db.query(sql, [tareaId, categoriaId]);
-
-    return { mensaje: 'Categoría asociada correctamente' };
+    try {
+      await this.db.query(sql, [tareaId, categoriaId]);
+      return { mensaje: 'Categoría asociada correctamente' };
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException(`Ya existe la relacion: (Tarea: ${tareaId}, Categoria: ${categoriaId})`);
+      }
+    }
+    throw error;
   }
 
   // ============================
@@ -133,6 +153,24 @@ export class TareasService {
       SELECT *
       FROM categorias
       WHERE id NOT IN (
+        SELECT categoria_id
+        FROM tareas_categorias
+        WHERE tarea_id = $1
+      );
+    `;
+
+    const result = await this.db.query(sql, [tareaId]);
+    return result.rows;
+  }
+
+  // ============================
+  // CATEGORÍAS ASOCIADAS
+  // ============================
+  async categoriasAsociadas(tareaId: number) {
+    const sql = `
+      SELECT *
+      FROM categorias
+      WHERE id IN (
         SELECT categoria_id
         FROM tareas_categorias
         WHERE tarea_id = $1

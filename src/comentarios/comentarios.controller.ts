@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Req, UseGuards } from '@nestjs/common';
 import { ComentariosService } from './comentarios.service';
 import { JwtGuard } from '../auth/jwt.guard';
+import { CreateComentarioDto } from './dto/createComentario.dto';
 
 @Controller('/tareas/:tareaID/comentarios')
 @UseGuards(JwtGuard)
@@ -21,8 +22,8 @@ export class ComentariosController {
 
   @Post()
   async createComentario(
-    @Body() body: any,
-    @Param('tareaID') tareaID: number,  
+    @Body() body: CreateComentarioDto,
+    @Param('tareaID', ParseIntPipe) tareaID: number,  
     @Req() req: any) {
       const creadorID = req.user.id;
       const { content } = body

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
@@ -18,6 +18,11 @@ export class ComentariosService {
   }
 
   async createComentario(content: string, tareaID: number, creadorID: number) {
+    const existsTarea = await this.db.query(`SELECT 1 FROM tareas WHERE id = $1`, [tareaID])
+    if (existsTarea.rowCount === 0) {
+      throw new NotFoundException(`No se encontró la tarea con el ID ${tareaID}`);
+    }
+
     const sql = `INSERT INTO comentarios(contenido, tarea_id, creador_id) VALUES ($1, $2, $3) RETURNING *`
     const result = await this.db.query(sql, [content, tareaID, creadorID])
     return result.rows[0];

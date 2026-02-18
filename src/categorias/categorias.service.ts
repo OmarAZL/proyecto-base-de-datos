@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateCategoria } from './dto/createCategoria.dto';
 
@@ -16,6 +16,9 @@ export class CategoriasService {
   async deleteCategoria(categoriaID: number) {
     const sql = `DELETE FROM categorias WHERE id = $1 RETURNING *`
     const result = await this.db.query(sql, [categoriaID])
+    if (result.rowCount === 0) {
+      throw new NotFoundException(`No se encontró la categoria con el ID ${categoriaID}`);
+    }
     
     return result.rows[0];
   }

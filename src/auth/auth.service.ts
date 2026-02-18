@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +23,11 @@ export class AuthService {
     return res.rows.length > 0;
   }
 
-  async login(email: string, password: string) {
-    const result = await this.db.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+  async login(login: LoginDto) {
+    const result = await this.db.query('SELECT * FROM usuarios WHERE email = $1', [login.email]);
     const user = result.rows[0];
 
-    if(user?.password !== password) {
+    if(user?.password !== login.password) {
       throw new UnauthorizedException('Credenciales inválidas')
     }
 

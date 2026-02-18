@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { CategoriasService } from './categorias.service';
 import { CreateCategoria } from './dto/createCategoria.dto';
 import { JwtGuard } from '../auth/jwt.guard';
@@ -14,7 +14,7 @@ export class CategoriasController {
   }
 
   @Delete(':id')
-  deleteCategoria(@Param('id') id: number) {
+  deleteCategoria(@Param('id', ParseIntPipe) id: number) {
     return this.categoriasService.deleteCategoria(id);
   }
 
@@ -24,7 +24,7 @@ export class CategoriasController {
   }
 
   @Get(':id')
-  getCategoria(@Param('id') id: number) {
+  getCategoria(@Param('id', ParseIntPipe) id: number) {
     return this.categoriasService.getCategoria(id);
   }
 }
