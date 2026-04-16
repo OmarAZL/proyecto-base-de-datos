@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS tareas CASCADE;
 DROP TABLE IF EXISTS blacklist_tokens CASCADE;
 DROP TABLE IF EXISTS categorias CASCADE;
 DROP TABLE IF EXISTS tareas_categorias CASCADE;
+DROP TABLE IF EXISTS comentarios CASCADE;
 
 -- ============================================================
 -- TABLA DE USUARIOS
@@ -55,7 +56,7 @@ CREATE TABLE IF NOT EXISTS tareas_categorias (
 CREATE TABLE IF NOT EXISTS comentarios (
   id SERIAL PRIMARY KEY,
   fecha_creacion DATE DEFAULT CURRENT_DATE,
-  contenido TEXT NOT NULL,
+  contenido TEXT UNIQUE NOT NULL,
   tarea_id INTEGER NOT NULL REFERENCES tareas(id) ON DELETE CASCADE,
   creador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE
 );
@@ -92,11 +93,21 @@ INSERT INTO categorias (nombre, descripcion, color) VALUES
 
 -- Tarea de ejemplo
 INSERT INTO tareas (nombre, descripcion, story_points, estado, fecha_entrega, creador_id, asignado_id) VALUES
-('Configurar entorno de desarrollo', 'Instalar Node.js, NestJS y PostgreSQL', 3, 'en progreso', '2026-02-10', 1, 2);
+('Configurar entorno de desarrollo', 'Instalar Node.js, NestJS y PostgreSQL', 3, 'en progreso', '2026-02-10', 1, 2),
+('Diseñar esquema de base de datos', 'Crear el diagrama ER y definir las tablas principales', 5, 'pendiente', '2026-03-01', 1, 3),
+('Implementar autenticación JWT', 'Configurar guards y servicios de login con Passport', 8, 'en progreso', '2026-03-05', 1, 2),
+('Crear CRUD de usuarios', 'Desarrollar los endpoints básicos de creación y edición', 3, 'completado', '2026-02-20', 2, 1),
+('Optimizar queries de búsqueda', 'Mejorar el rendimiento de los filtros en la tabla de tareas', 5, 'pendiente', '2026-03-12', 3, 2),
+('Redactar documentación técnica', 'Documentar la API usando Swagger/OpenAPI', 2, 'en progreso', '2026-03-15', 1, 3);
 
 -- Comentario de ejemplo
 INSERT INTO comentarios (contenido, tarea_id, creador_id) VALUES
-('¡Empecemos con el setup del proyecto!', 1, 1);
+('¡Empecemos con el setup del proyecto!', 1, 1),
+('He subido el primer boceto del diagrama a la carpeta compartida.', 2, 3),
+('¿Necesitamos usar Refresh Tokens o solo Access Tokens?', 3, 2),
+('Ya terminé los tests unitarios para los servicios de usuario.', 4, 1),
+('He detectado un cuello de botella en la tabla de logs.', 4, 2),
+('La documentación estará lista para la revisión del viernes.', 4, 3);
 
 -- Asociación de categorías a tarea
 INSERT INTO tareas_categorias (tarea_id, categoria_id) VALUES
